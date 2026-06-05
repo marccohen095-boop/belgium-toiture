@@ -176,7 +176,7 @@
       background: #eef0ec;
     }
 
-    .calculator, .result-card, .preview-card {
+    .calculator, .result-card, .preview-card, .dormer-section, .recap-card {
       padding: 16px;
       border: 1px solid var(--line);
       border-radius: 10px;
@@ -239,6 +239,42 @@
       border-color: rgba(182, 71, 50, .35);
     }
 
+    .dormer-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .dormer-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fbfcfa;
+    }
+
+    .dormer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .dormer-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 10px;
+      margin-top: 4px;
+    }
+
+    .help-note {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      color: #3f5149;
+      border-radius: 0 8px 8px 0;
+    }
+
     .result-grid {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -295,7 +331,7 @@
       .app { display: block; }
       .panel, main { padding: 16px; }
       .panel { border-right: 0; border-bottom: 1px solid var(--line); }
-      .preview-layout, .field-grid, .result-grid { grid-template-columns: 1fr; }
+      .preview-layout, .field-grid, .result-grid, .dormer-fields { grid-template-columns: 1fr; }
       .selected-image { max-height: 280px; }
     }
   </style>
@@ -337,6 +373,16 @@
         <div id="message" class="message"></div>
       </section>
 
+      <section class="dormer-section">
+        <h2>Lucarnes / niches de toiture</h2>
+        <p>Compte l’emprise cachée sur le pan principal.</p>
+        <div class="actions">
+          <button id="addDormer" type="button">+ Ajouter une lucarne</button>
+        </div>
+        <div id="dormerList" class="dormer-list"></div>
+        <p id="dormerHelp" class="help-note"></p>
+      </section>
+
       <section class="result-card">
         <h2>Résultat direct</h2>
         <div class="result-grid">
@@ -362,6 +408,32 @@
           </div>
         </div>
       </section>
+
+      <section class="recap-card">
+        <h2>Récapitulatif surface réelle</h2>
+        <div class="result-grid">
+          <div class="metric">
+            <small>Surface brute</small>
+            <strong id="grossAreaResult">0,00 m²</strong>
+          </div>
+          <div class="metric">
+            <small>Lucarnes à retirer</small>
+            <strong id="dormerAreaResult">-0,00 m²</strong>
+          </div>
+          <div class="metric">
+            <small>Nombre lucarnes</small>
+            <strong id="dormerCountResult">0</strong>
+          </div>
+          <div class="metric">
+            <small>Surface réelle</small>
+            <strong id="realAreaResult">0,00 m²</strong>
+          </div>
+          <div class="metric">
+            <small>Réelle avec chute</small>
+            <strong id="realWasteResult">0,00 m²</strong>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -379,6 +451,14 @@
     const totalResult = document.getElementById('totalResult');
     const wasteResult = document.getElementById('wasteResult');
     const resetCounts = document.getElementById('resetCounts');
+    const addDormer = document.getElementById('addDormer');
+    const dormerList = document.getElementById('dormerList');
+    const dormerHelp = document.getElementById('dormerHelp');
+    const grossAreaResult = document.getElementById('grossAreaResult');
+    const dormerAreaResult = document.getElementById('dormerAreaResult');
+    const dormerCountResult = document.getElementById('dormerCountResult');
+    const realAreaResult = document.getElementById('realAreaResult');
+    const realWasteResult = document.getElementById('realWasteResult');
 
     const calcLabels = {
       count_tiles: 'Calcul par tuiles',
@@ -387,6 +467,14 @@
       count_panels: 'Calcul par plaques/panneaux',
       count_bac_imitation_tuile: 'Calcul imitation tuile'
     };
+
+    const DORMER_SHAPE_FACTORS = {
+      rectangle: 1,
+      triangle: 0.5,
+      houseShape: 0.75
+    };
+
+    let dormers = [];
 
     const belgiumRoofCoverings = [
       {
@@ -880,6 +968,102 @@
       return calculateBacImitationTuile(values);
     }
 
+    function dormerUnitConfig(item, values = valuesFromForm()) {
+      const cfg = item.defaultConfig;
+      if (item.calculationMode === 'count_tiles') {
+        return {
+          horizontalLabel: 'Nombre de tuiles en horizontal',
+          verticalLabel: 'Nombre de rangées en vertical',
+          unitWidthMm: parseNumber(currentValue('usefulWidthMm')) || cfg.usefulWidthMm,
+          unitHeightMm: parseNumber(currentValue('battenGaugeMm')) || cfg.battenGaugeMm,
+          help: 'La largeur est calculée avec la largeur utile. La hauteur est calculée avec le pureau / lattage.'
+        };
+      }
+      if (item.calculationMode === 'count_visible_modules' || (item.calculationMode === 'count_bac_imitation_tuile' && values.imitationMode !== 'panels')) {
+        return {
+          horizontalLabel: item.category === 'losange_triangle' ? 'Nombre de losanges / triangles en horizontal' : 'Nombre de modules en horizontal',
+          verticalLabel: 'Nombre de rangées en vertical',
+          unitWidthMm: parseNumber(currentValue('visibleWidthMm')) || cfg.visibleWidthMm,
+          unitHeightMm: parseNumber(currentValue('visibleHeightMm')) || cfg.visibleHeightMm,
+          help: 'La largeur est calculée avec la largeur visible. La hauteur est calculée avec la hauteur visible.'
+        };
+      }
+      if (item.calculationMode === 'count_waves_and_sheets') {
+        return {
+          horizontalLabel: 'Nombre d’ondes / nervures en horizontal',
+          verticalLabel: 'Nombre de plaques en vertical',
+          unitWidthMm: parseNumber(currentValue('wavePitchMm')) || cfg.wavePitchMm,
+          unitHeightMm: (parseNumber(currentValue('sheetLengthM')) || cfg.sheetLengthM) * 1000,
+          help: 'La largeur est calculée avec les ondes, nervures ou profils. La hauteur est calculée avec les plaques et leur longueur utile.'
+        };
+      }
+      return {
+        horizontalLabel: 'Nombre de plaques en horizontal',
+        verticalLabel: 'Nombre de plaques en vertical',
+        unitWidthMm: (parseNumber(currentValue('usefulPanelWidthM')) || cfg.usefulPanelWidthM) * 1000,
+        unitHeightMm: (parseNumber(currentValue('usefulPanelLengthM')) || cfg.usefulPanelLengthM) * 1000,
+        help: 'La largeur est calculée avec la largeur utile du panneau. La hauteur est calculée avec sa longueur utile.'
+      };
+    }
+
+    function calculateDormerFootprint(params) {
+      const dormerCount = params.dormerCount || 1;
+      const shapeFactor = params.shapeFactor || 1;
+      const widthM = (params.horizontalCount * params.unitWidthMm) / 1000;
+      const heightM = (params.verticalCount * params.unitHeightMm) / 1000;
+      const singleDormerAreaM2 = widthM * heightM * shapeFactor;
+      const totalDormerAreaM2 = singleDormerAreaM2 * dormerCount;
+      return {
+        widthM: round2(widthM),
+        heightM: round2(heightM),
+        singleDormerAreaM2: round2(singleDormerAreaM2),
+        totalDormerAreaM2: round2(totalDormerAreaM2)
+      };
+    }
+
+    function dormerValues() {
+      return dormers.map((dormer) => ({
+        id: dormer.id,
+        horizontalCount: parseNumber(document.querySelector(`[data-dormer-id="${dormer.id}"][data-dormer-field="horizontalCount"]`)?.value),
+        verticalCount: parseNumber(document.querySelector(`[data-dormer-id="${dormer.id}"][data-dormer-field="verticalCount"]`)?.value),
+        dormerCount: parseNumber(document.querySelector(`[data-dormer-id="${dormer.id}"][data-dormer-field="dormerCount"]`)?.value) || 1,
+        shape: document.querySelector(`[data-dormer-id="${dormer.id}"][data-dormer-field="shape"]`)?.value || 'rectangle'
+      }));
+    }
+
+    function validateDormers() {
+      for (const dormer of dormerValues()) {
+        if (dormer.horizontalCount <= 0) return 'Nombre horizontal obligatoire pour chaque lucarne.';
+        if (dormer.verticalCount <= 0) return 'Nombre vertical obligatoire pour chaque lucarne.';
+        if (dormer.dormerCount <= 0) return 'Nombre de lucarnes obligatoire.';
+      }
+      return '';
+    }
+
+    function calculateDormers(item, grossAreaM2) {
+      const unit = dormerUnitConfig(item);
+      let totalDormerAreaM2 = 0;
+      let totalDormerCount = 0;
+      dormerValues().forEach((dormer) => {
+        const calc = calculateDormerFootprint({
+          horizontalCount: dormer.horizontalCount,
+          verticalCount: dormer.verticalCount,
+          unitWidthMm: unit.unitWidthMm,
+          unitHeightMm: unit.unitHeightMm,
+          dormerCount: dormer.dormerCount,
+          shapeFactor: DORMER_SHAPE_FACTORS[dormer.shape] || 1
+        });
+        totalDormerAreaM2 += calc.totalDormerAreaM2;
+        totalDormerCount += dormer.dormerCount;
+      });
+      const realRoofAreaM2 = Math.max(0, grossAreaM2 - totalDormerAreaM2);
+      return {
+        totalDormerAreaM2: round2(totalDormerAreaM2),
+        totalDormerCount: round2(totalDormerCount),
+        realRoofAreaM2: round2(realRoofAreaM2)
+      };
+    }
+
     function setupMaterials() {
       roofCoverings.forEach((item) => {
         const card = document.createElement('button');
@@ -925,6 +1109,7 @@
             const preserved = preserveValues();
             preserved[itemField.key] = select.value;
             renderFields(currentItem(), preserved);
+            renderDormers();
             updateResults();
           });
           wrap.appendChild(select);
@@ -954,6 +1139,72 @@
       selectedHelp.textContent = item.helpText;
       selectedBadge.textContent = calcLabels[item.calculationMode];
       renderFields(item);
+      renderDormers();
+      updateResults();
+    }
+
+    function renderDormers() {
+      const item = currentItem();
+      const unit = dormerUnitConfig(item);
+      dormerHelp.textContent = `Comptez combien de tuiles, ardoises, modules ou plaques la lucarne occupe en largeur, puis combien de rangées elle occupe en hauteur. ${unit.help}`;
+      dormerList.innerHTML = '';
+      dormers.forEach((dormer, index) => {
+        const card = document.createElement('div');
+        card.className = 'dormer-card';
+        card.innerHTML = `
+          <div class="dormer-head">
+            <strong>Lucarne ${index + 1}</strong>
+            <button class="danger" type="button" data-remove-dormer="${dormer.id}">Supprimer</button>
+          </div>
+          <div class="dormer-fields">
+            <div>
+              <label>${unit.horizontalLabel}</label>
+              <input inputmode="decimal" data-dormer-id="${dormer.id}" data-dormer-field="horizontalCount" value="${dormer.horizontalCount}">
+            </div>
+            <div>
+              <label>${unit.verticalLabel}</label>
+              <input inputmode="decimal" data-dormer-id="${dormer.id}" data-dormer-field="verticalCount" value="${dormer.verticalCount}">
+            </div>
+            <div>
+              <label>Nombre de lucarnes identiques</label>
+              <input inputmode="decimal" data-dormer-id="${dormer.id}" data-dormer-field="dormerCount" value="${dormer.dormerCount}">
+            </div>
+            <div>
+              <label>Forme de l’emprise</label>
+              <select data-dormer-id="${dormer.id}" data-dormer-field="shape">
+                <option value="rectangle">Rectangle complet</option>
+                <option value="triangle">Triangle</option>
+                <option value="houseShape">Maison / lucarne à pointe</option>
+              </select>
+            </div>
+          </div>
+        `;
+        dormerList.appendChild(card);
+        card.querySelector('[data-dormer-field="shape"]').value = dormer.shape;
+      });
+
+      dormerList.querySelectorAll('[data-dormer-id]').forEach((input) => {
+        input.addEventListener('input', syncDormerState);
+        input.addEventListener('change', syncDormerState);
+        input.addEventListener('keyup', syncDormerState);
+      });
+      dormerList.querySelectorAll('[data-remove-dormer]').forEach((button) => {
+        button.addEventListener('click', () => {
+          dormers = dormers.filter((dormer) => String(dormer.id) !== String(button.dataset.removeDormer));
+          renderDormers();
+          updateResults();
+        });
+      });
+    }
+
+    function syncDormerState() {
+      dormers = dormerValues().map((dormer) => ({
+        id: dormer.id,
+        horizontalCount: document.querySelector(`[data-dormer-id="${dormer.id}"][data-dormer-field="horizontalCount"]`)?.value || '',
+        verticalCount: document.querySelector(`[data-dormer-id="${dormer.id}"][data-dormer-field="verticalCount"]`)?.value || '',
+        dormerCount: document.querySelector(`[data-dormer-id="${dormer.id}"][data-dormer-field="dormerCount"]`)?.value || '1',
+        shape: dormer.shape
+      }));
       updateResults();
     }
 
@@ -983,8 +1234,17 @@
       wasteResult.textContent = formatM2(result.areaWithWasteM2);
     }
 
+    function setRecap(grossAreaM2, dormerAreaM2, dormerCount, realAreaM2, realWasteM2) {
+      grossAreaResult.textContent = formatM2(grossAreaM2);
+      dormerAreaResult.textContent = `-${formatM2(dormerAreaM2)}`;
+      dormerCountResult.textContent = Number(dormerCount || 0).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+      realAreaResult.textContent = formatM2(realAreaM2);
+      realWasteResult.textContent = formatM2(realWasteM2);
+    }
+
     function resetResult() {
       setResults({ widthM: 0, heightM: 0, areaM2: 0, totalAreaM2: 0, areaWithWasteM2: 0 });
+      setRecap(0, 0, 0, 0, 0);
     }
 
     function updateResults() {
@@ -998,9 +1258,29 @@
       }
 
       const result = calculate(item, values);
-      setResults(result);
+      const dormerError = validateDormers();
+      if (dormerError) {
+        setResults(result);
+        setRecap(result.totalAreaM2, 0, 0, result.totalAreaM2, result.areaWithWasteM2);
+        setMessage(dormerError, 'error');
+        return;
+      }
 
-      if (result.areaM2 < 1) {
+      const dormerResult = calculateDormers(item, result.totalAreaM2);
+      const realWasteM2 = round2(dormerResult.realRoofAreaM2 * (1 + (parseNumber(values.wastePercent) || 0) / 100));
+      result.areaWithWasteM2 = realWasteM2;
+      setResults(result);
+      setRecap(
+        result.totalAreaM2,
+        dormerResult.totalDormerAreaM2,
+        dormerResult.totalDormerCount,
+        dormerResult.realRoofAreaM2,
+        realWasteM2
+      );
+
+      if (dormerResult.totalDormerAreaM2 > result.totalAreaM2) {
+        setMessage('Attention : l’emprise des lucarnes dépasse la surface du pan. Vérifiez les valeurs.', 'warn');
+      } else if (result.areaM2 < 1) {
         setMessage('Surface très faible, vérifiez les valeurs.', 'warn');
       } else if (result.areaM2 > 1000) {
         setMessage('Surface très élevée, vérifiez les valeurs.', 'warn');
@@ -1015,6 +1295,19 @@
         if (input.dataset.field === 'horizontalWaveCount') input.value = '';
         if (input.dataset.field === 'verticalSheetCount') input.value = '';
       });
+      updateResults();
+    });
+
+    addDormer.addEventListener('click', () => {
+      const nextId = Date.now();
+      dormers.push({
+        id: nextId,
+        horizontalCount: '',
+        verticalCount: '',
+        dormerCount: '1',
+        shape: 'rectangle'
+      });
+      renderDormers();
       updateResults();
     });
 
