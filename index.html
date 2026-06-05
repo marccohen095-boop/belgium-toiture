@@ -635,25 +635,29 @@
     }
 
     function calculateByTileCount(params) {
-      const widthM = params.horizontalCount * params.usefulWidthMm / 1000;
+      const horizontalCount = shapedHorizontalCount(params.horizontalCount, params.topHorizontalCount, params.roofShape);
+      const widthM = horizontalCount * params.usefulWidthMm / 1000;
       const heightM = params.verticalCount * params.battenGaugeMm / 1000;
       return withWaste(widthM, heightM, params.wastePercent);
     }
 
     function calculateByVisibleModules(params) {
-      const widthM = params.horizontalCount * params.visibleWidthMm / 1000;
+      const horizontalCount = shapedHorizontalCount(params.horizontalCount, params.topHorizontalCount, params.roofShape);
+      const widthM = horizontalCount * params.visibleWidthMm / 1000;
       const heightM = params.verticalCount * params.visibleHeightMm / 1000;
       return withWaste(widthM, heightM, params.wastePercent);
     }
 
     function calculateByWavesAndSheets(params) {
-      const widthM = params.horizontalWaveCount * params.wavePitchMm / 1000;
+      const horizontalCount = shapedHorizontalCount(params.horizontalWaveCount, params.topHorizontalCount, params.roofShape);
+      const widthM = horizontalCount * params.wavePitchMm / 1000;
       const heightM = params.verticalSheetCount * params.sheetLengthM;
       return withWaste(widthM, heightM, params.wastePercent);
     }
 
     function calculateByPanelCount(params) {
-      const widthM = params.horizontalPanelCount * params.usefulPanelWidthM;
+      const horizontalCount = shapedHorizontalCount(params.horizontalPanelCount, params.topHorizontalCount, params.roofShape);
+      const widthM = horizontalCount * params.usefulPanelWidthM;
       const heightM = params.verticalPanelCount * params.usefulPanelLengthM;
       return withWaste(widthM, heightM, params.wastePercent);
     }
@@ -663,6 +667,13 @@
         return calculateByPanelCount(params);
       }
       return calculateByVisibleModules(params);
+    }
+
+    function shapedHorizontalCount(baseCount, topCount, shape) {
+      const base = Math.max(Number(baseCount) || 0, 0);
+      if (shape !== 'triangle') return base;
+      const top = Math.max(Number(topCount) || 0, 0);
+      return (base + Math.min(top, base)) / 2;
     }
 
     function withWaste(widthM, heightM, wastePercent) {
@@ -686,9 +697,17 @@
 
     function fieldsFor(item) {
       const cfg = item.defaultConfig;
+      const shape = currentValue('roofShape') || 'rect';
+      const shapeField = selectField('Forme du pan', 'roofShape', shape, [
+        { value: 'rect', label: 'Toit droit' },
+        { value: 'triangle', label: 'Toit triangle' }
+      ]);
+      const topField = shape === 'triangle' ? [field('Rangée haute horizontale', 'topHorizontalCount', '', '', false)] : [];
       if (item.calculationMode === 'count_tiles') {
         return [
-          field('Nombre en horizontal', 'horizontalCount', '', ''),
+          shapeField,
+          field(shape === 'triangle' ? 'Base horizontale' : 'Nombre en horizontal', 'horizontalCount', '', ''),
+          ...topField,
           field('Nombre de rangées en vertical', 'verticalCount', '', ''),
           field('Largeur utile', 'usefulWidthMm', 'mm', cfg.usefulWidthMm),
           field('Lattage / pureau', 'battenGaugeMm', 'mm', cfg.battenGaugeMm),
@@ -697,7 +716,9 @@
       }
       if (item.calculationMode === 'count_visible_modules') {
         return [
-          field('Nombre en horizontal', 'horizontalCount', '', ''),
+          shapeField,
+          field(shape === 'triangle' ? 'Base horizontale' : 'Nombre en horizontal', 'horizontalCount', '', ''),
+          ...topField,
           field('Nombre en vertical', 'verticalCount', '', ''),
           field('Largeur visible', 'visibleWidthMm', 'mm', cfg.visibleWidthMm),
           field('Hauteur visible', 'visibleHeightMm', 'mm', cfg.visibleHeightMm),
@@ -706,7 +727,9 @@
       }
       if (item.calculationMode === 'count_waves_and_sheets') {
         return [
-          field('Nombre d’ondes / nervures en horizontal', 'horizontalWaveCount', '', ''),
+          shapeField,
+          field(shape === 'triangle' ? 'Base en ondes / nervures' : 'Nombre d’ondes / nervures en horizontal', 'horizontalWaveCount', '', ''),
+          ...topField,
           field('Largeur d’une onde / nervure', 'wavePitchMm', 'mm', cfg.wavePitchMm),
           field('Nombre de plaques en hauteur', 'verticalSheetCount', '', ''),
           field('Longueur utile d’une plaque', 'sheetLengthM', 'm', cfg.sheetLengthM),
@@ -715,7 +738,9 @@
       }
       if (item.calculationMode === 'count_panels') {
         return [
-          field('Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
+          shapeField,
+          field(shape === 'triangle' ? 'Base en plaques' : 'Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
+          ...topField,
           field('Largeur utile d’une plaque', 'usefulPanelWidthM', 'm', cfg.usefulPanelWidthM),
           field('Nombre de plaques en vertical', 'verticalPanelCount', '', ''),
           field('Longueur utile d’une plaque', 'usefulPanelLengthM', 'm', cfg.usefulPanelLengthM),
@@ -731,8 +756,10 @@
 
       if (mode === 'panels') {
         return [
+          shapeField,
           modeField,
-          field('Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
+          field(shape === 'triangle' ? 'Base en plaques' : 'Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
+          ...topField,
           field('Largeur utile d’une plaque', 'usefulPanelWidthM', 'm', cfg.usefulPanelWidthM),
           field('Nombre de plaques en vertical', 'verticalPanelCount', '', ''),
           field('Longueur utile d’une plaque', 'usefulPanelLengthM', 'm', cfg.usefulPanelLengthM),
@@ -741,8 +768,10 @@
       }
 
       return [
+        shapeField,
         modeField,
-        field('Nombre de modules en horizontal', 'horizontalCount', '', ''),
+        field(shape === 'triangle' ? 'Base horizontale' : 'Nombre de modules en horizontal', 'horizontalCount', '', ''),
+        ...topField,
         field('Nombre de rangées en vertical', 'verticalCount', '', ''),
         field('Largeur visible d’un module', 'visibleWidthMm', 'mm', cfg.visibleWidthMm),
         field('Hauteur visible d’une rangée', 'visibleHeightMm', 'mm', cfg.visibleHeightMm),
@@ -801,6 +830,9 @@
         }
       }
 
+      if (values.topHorizontalCount < 0) {
+        return 'La rangée haute ne peut pas être négative.';
+      }
       const waste = values.wastePercent || 0;
       if (waste < 0) return 'La chute ne peut pas être négative.';
       return '';
