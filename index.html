@@ -241,7 +241,7 @@
 
     .result-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -349,11 +349,15 @@
             <strong id="heightResult">0,00 m</strong>
           </div>
           <div class="metric">
-            <small>Surface</small>
+            <small>Surface 1 pan</small>
             <strong id="areaResult">0,00 m²</strong>
           </div>
           <div class="metric">
-            <small>Avec chute</small>
+            <small>Total pans</small>
+            <strong id="totalResult">0,00 m²</strong>
+          </div>
+          <div class="metric">
+            <small>Total avec chute</small>
             <strong id="wasteResult">0,00 m²</strong>
           </div>
         </div>
@@ -372,6 +376,7 @@
     const widthResult = document.getElementById('widthResult');
     const heightResult = document.getElementById('heightResult');
     const areaResult = document.getElementById('areaResult');
+    const totalResult = document.getElementById('totalResult');
     const wasteResult = document.getElementById('wasteResult');
     const resetCounts = document.getElementById('resetCounts');
 
@@ -638,28 +643,28 @@
       const horizontalCount = shapedHorizontalCount(params.horizontalCount, params.topHorizontalCount, params.roofShape);
       const widthM = horizontalCount * params.usefulWidthMm / 1000;
       const heightM = params.verticalCount * params.battenGaugeMm / 1000;
-      return withWaste(widthM, heightM, params.wastePercent);
+      return withWaste(widthM, heightM, params.wastePercent, params.panMultiplier);
     }
 
     function calculateByVisibleModules(params) {
       const horizontalCount = shapedHorizontalCount(params.horizontalCount, params.topHorizontalCount, params.roofShape);
       const widthM = horizontalCount * params.visibleWidthMm / 1000;
       const heightM = params.verticalCount * params.visibleHeightMm / 1000;
-      return withWaste(widthM, heightM, params.wastePercent);
+      return withWaste(widthM, heightM, params.wastePercent, params.panMultiplier);
     }
 
     function calculateByWavesAndSheets(params) {
       const horizontalCount = shapedHorizontalCount(params.horizontalWaveCount, params.topHorizontalCount, params.roofShape);
       const widthM = horizontalCount * params.wavePitchMm / 1000;
       const heightM = params.verticalSheetCount * params.sheetLengthM;
-      return withWaste(widthM, heightM, params.wastePercent);
+      return withWaste(widthM, heightM, params.wastePercent, params.panMultiplier);
     }
 
     function calculateByPanelCount(params) {
       const horizontalCount = shapedHorizontalCount(params.horizontalPanelCount, params.topHorizontalCount, params.roofShape);
       const widthM = horizontalCount * params.usefulPanelWidthM;
       const heightM = params.verticalPanelCount * params.usefulPanelLengthM;
-      return withWaste(widthM, heightM, params.wastePercent);
+      return withWaste(widthM, heightM, params.wastePercent, params.panMultiplier);
     }
 
     function calculateBacImitationTuile(params) {
@@ -676,13 +681,16 @@
       return (base + Math.min(top, base)) / 2;
     }
 
-    function withWaste(widthM, heightM, wastePercent) {
+    function withWaste(widthM, heightM, wastePercent, panMultiplier) {
+      const multiplier = Math.max(Number(panMultiplier) || 1, 1);
       const areaM2 = widthM * heightM;
-      const areaWithWasteM2 = areaM2 * (1 + (wastePercent || 0) / 100);
+      const totalAreaM2 = areaM2 * multiplier;
+      const areaWithWasteM2 = totalAreaM2 * (1 + (wastePercent || 0) / 100);
       return {
         widthM: round2(widthM),
         heightM: round2(heightM),
         areaM2: round2(areaM2),
+        totalAreaM2: round2(totalAreaM2),
         areaWithWasteM2: round2(areaWithWasteM2)
       };
     }
@@ -695,17 +703,24 @@
       return { label, key, value, options, required: true, type: 'select' };
     }
 
-    function fieldsFor(item) {
+    function fieldsFor(item, preservedValues = null) {
       const cfg = item.defaultConfig;
-      const shape = currentValue('roofShape') || 'rect';
+      const shape = (preservedValues && preservedValues.roofShape) || currentValue('roofShape') || 'rect';
       const shapeField = selectField('Forme du pan', 'roofShape', shape, [
         { value: 'rect', label: 'Toit droit' },
         { value: 'triangle', label: 'Toit triangle' }
+      ]);
+      const multiplier = (preservedValues && preservedValues.panMultiplier) || currentValue('panMultiplier') || '1';
+      const multiplierField = selectField('Nombre de pans identiques', 'panMultiplier', multiplier, [
+        { value: '1', label: '1 pan' },
+        { value: '2', label: '2 pans identiques' },
+        { value: '4', label: '4 façades triangle' }
       ]);
       const topField = shape === 'triangle' ? [field('Rangée haute horizontale', 'topHorizontalCount', '', '', false)] : [];
       if (item.calculationMode === 'count_tiles') {
         return [
           shapeField,
+          multiplierField,
           field(shape === 'triangle' ? 'Base horizontale' : 'Nombre en horizontal', 'horizontalCount', '', ''),
           ...topField,
           field('Nombre de rangées en vertical', 'verticalCount', '', ''),
@@ -717,6 +732,7 @@
       if (item.calculationMode === 'count_visible_modules') {
         return [
           shapeField,
+          multiplierField,
           field(shape === 'triangle' ? 'Base horizontale' : 'Nombre en horizontal', 'horizontalCount', '', ''),
           ...topField,
           field('Nombre en vertical', 'verticalCount', '', ''),
@@ -728,6 +744,7 @@
       if (item.calculationMode === 'count_waves_and_sheets') {
         return [
           shapeField,
+          multiplierField,
           field(shape === 'triangle' ? 'Base en ondes / nervures' : 'Nombre d’ondes / nervures en horizontal', 'horizontalWaveCount', '', ''),
           ...topField,
           field('Largeur d’une onde / nervure', 'wavePitchMm', 'mm', cfg.wavePitchMm),
@@ -739,6 +756,7 @@
       if (item.calculationMode === 'count_panels') {
         return [
           shapeField,
+          multiplierField,
           field(shape === 'triangle' ? 'Base en plaques' : 'Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
           ...topField,
           field('Largeur utile d’une plaque', 'usefulPanelWidthM', 'm', cfg.usefulPanelWidthM),
@@ -748,7 +766,7 @@
         ];
       }
 
-      const mode = currentValue('imitationMode') || cfg.imitationMode || 'modules';
+      const mode = (preservedValues && preservedValues.imitationMode) || currentValue('imitationMode') || cfg.imitationMode || 'modules';
       const modeField = selectField('Méthode de comptage', 'imitationMode', mode, [
         { value: 'modules', label: 'Je compte les fausses tuiles visibles' },
         { value: 'panels', label: 'Je compte les plaques complètes' }
@@ -757,6 +775,7 @@
       if (mode === 'panels') {
         return [
           shapeField,
+          multiplierField,
           modeField,
           field(shape === 'triangle' ? 'Base en plaques' : 'Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
           ...topField,
@@ -769,6 +788,7 @@
 
       return [
         shapeField,
+        multiplierField,
         modeField,
         field(shape === 'triangle' ? 'Base horizontale' : 'Nombre de modules en horizontal', 'horizontalCount', '', ''),
         ...topField,
@@ -794,6 +814,17 @@
         values[input.dataset.field] = input.tagName === 'SELECT' ? input.value : parseNumber(input.value);
       });
       return values;
+    }
+
+    function preserveValues() {
+      return valuesFromForm();
+    }
+
+    function valueForField(itemField, preserved) {
+      if (preserved && Object.prototype.hasOwnProperty.call(preserved, itemField.key)) {
+        return preserved[itemField.key];
+      }
+      return itemField.value ?? '';
     }
 
     function requiredFieldsForMode(item) {
@@ -833,6 +864,9 @@
       if (values.topHorizontalCount < 0) {
         return 'La rangée haute ne peut pas être négative.';
       }
+      if (values.panMultiplier < 1) {
+        return 'Le nombre de pans doit être au minimum 1.';
+      }
       const waste = values.wastePercent || 0;
       if (waste < 0) return 'La chute ne peut pas être négative.';
       return '';
@@ -867,9 +901,9 @@
       });
     }
 
-    function renderFields(item) {
+    function renderFields(item, preservedValues = null) {
       fieldsEl.innerHTML = '';
-      fieldsFor(item).forEach((itemField) => {
+      fieldsFor(item, preservedValues).forEach((itemField) => {
         const wrap = document.createElement('div');
         const labelEl = document.createElement('label');
         labelEl.setAttribute('for', itemField.key);
@@ -886,9 +920,11 @@
             optionEl.textContent = option.label;
             select.appendChild(optionEl);
           });
-          select.value = itemField.value;
+          select.value = valueForField(itemField, preservedValues);
           select.addEventListener('change', () => {
-            renderFields(currentItem());
+            const preserved = preserveValues();
+            preserved[itemField.key] = select.value;
+            renderFields(currentItem(), preserved);
             updateResults();
           });
           wrap.appendChild(select);
@@ -898,7 +934,7 @@
           input.dataset.field = itemField.key;
           input.inputMode = 'decimal';
           input.placeholder = itemField.required ? 'à remplir' : '';
-          input.value = itemField.value ?? '';
+          input.value = valueForField(itemField, preservedValues);
           bindLive(input);
           wrap.appendChild(input);
         }
@@ -943,11 +979,12 @@
       widthResult.textContent = formatM(result.widthM);
       heightResult.textContent = formatM(result.heightM);
       areaResult.textContent = formatM2(result.areaM2);
+      totalResult.textContent = formatM2(result.totalAreaM2);
       wasteResult.textContent = formatM2(result.areaWithWasteM2);
     }
 
     function resetResult() {
-      setResults({ widthM: 0, heightM: 0, areaM2: 0, areaWithWasteM2: 0 });
+      setResults({ widthM: 0, heightM: 0, areaM2: 0, totalAreaM2: 0, areaWithWasteM2: 0 });
     }
 
     function updateResults() {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'belgium-toiture-v5';
+const CACHE_NAME = 'belgium-toiture-v6';
 const ASSETS = [
   './',
   './index.html',
