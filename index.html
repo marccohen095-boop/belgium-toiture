@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Belgium Toiture</title>
+  <meta name="theme-color" content="#176d5f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Belgium Toiture">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./assets/brand/belgium-toiture-icon.png">
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --paper: #ffffff;
+      --ink: #202421;
+      --muted: #687169;
+      --line: #dbe0da;
+      --accent: #176d5f;
+      --accent-soft: #e6f1ed;
+      --danger: #b64732;
+      --warn: #976a15;
+      --shadow: 0 14px 34px rgba(31, 39, 34, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Avenir Next, Gill Sans, Segoe UI, sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(320px, 470px) minmax(0, 1fr);
+    }
+
+    .panel {
+      padding: 22px;
+      background: var(--paper);
+      border-right: 1px solid var(--line);
+      overflow: auto;
+    }
+
+    main {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.05;
+      font-weight: 800;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #465048;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(23, 109, 95, .13);
+    }
+
+    .brand {
+      display: grid;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: min(100%, 280px);
+      height: auto;
+      display: block;
+    }
+
+    .group {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .material-gallery {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .material-option {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      min-height: 84px;
+      padding: 8px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .material-option.active {
+      border-color: var(--accent);
+      background: #fbfffd;
+      box-shadow: 0 0 0 3px rgba(23, 109, 95, .13);
+    }
+
+    .material-option strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .dimension-text {
+      color: var(--accent);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .material-option small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .roof-sample {
+      width: 72px;
+      height: 86px;
+      border: 1px solid rgba(0,0,0,.13);
+      border-radius: 8px;
+      object-fit: cover;
+      display: block;
+      background: #eef0ec;
+    }
+
+    .calculator, .result-card, .preview-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .preview-layout {
+      display: grid;
+      grid-template-columns: minmax(160px, 260px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .selected-image {
+      width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f4f5f2;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button.danger {
+      color: var(--danger);
+      border-color: rgba(182, 71, 50, .35);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      min-height: 104px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fbfcfa;
+    }
+
+    .metric small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 28px;
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+    }
+
+    .message {
+      display: none;
+      margin-top: 12px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fbfcfa;
+      color: var(--muted);
+    }
+
+    .message.show { display: block; }
+    .message.error {
+      border-color: rgba(182, 71, 50, .35);
+      color: var(--danger);
+      background: #fff7f5;
+    }
+    .message.warn {
+      border-color: rgba(151, 106, 21, .35);
+      color: var(--warn);
+      background: #fffaf0;
+    }
+
+    @media (max-width: 980px) {
+      .app { display: block; }
+      .panel, main { padding: 16px; }
+      .panel { border-right: 0; border-bottom: 1px solid var(--line); }
+      .preview-layout, .field-grid, .result-grid { grid-template-columns: 1fr; }
+      .selected-image { max-height: 280px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel">
+      <div class="brand">
+        <img class="brand-logo" src="./assets/brand/belgium-energy-logo.png" alt="Belgium Toiture">
+        <h1>Belgium Toiture</h1>
+      </div>
+      <p>Choisis la couverture, compte ce que tu vois, l'app calcule la surface.</p>
+
+      <div class="group">
+        <h2>Couverture</h2>
+        <div id="materialGallery" class="material-gallery"></div>
+      </div>
+    </aside>
+
+    <main>
+      <section class="preview-card">
+        <h2>Modèle choisi</h2>
+        <div class="preview-layout">
+          <img id="selectedImage" class="selected-image" src="" alt="">
+          <div>
+            <h1 id="selectedName">Belgium Toiture</h1>
+            <p id="selectedHelp"></p>
+            <span id="selectedBadge" class="badge"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="calculator">
+        <h2>Comptage</h2>
+        <div id="fields" class="field-grid"></div>
+        <div class="actions">
+          <button id="resetCounts" class="danger" type="button">Réinitialiser</button>
+        </div>
+        <div id="message" class="message"></div>
+      </section>
+
+      <section class="result-card">
+        <h2>Résultat direct</h2>
+        <div class="result-grid">
+          <div class="metric">
+            <small>Largeur</small>
+            <strong id="widthResult">0,00 m</strong>
+          </div>
+          <div class="metric">
+            <small>Hauteur</small>
+            <strong id="heightResult">0,00 m</strong>
+          </div>
+          <div class="metric">
+            <small>Surface</small>
+            <strong id="areaResult">0,00 m²</strong>
+          </div>
+          <div class="metric">
+            <small>Avec chute</small>
+            <strong id="wasteResult">0,00 m²</strong>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const materialGallery = document.getElementById('materialGallery');
+    const selectedImage = document.getElementById('selectedImage');
+    const selectedName = document.getElementById('selectedName');
+    const selectedHelp = document.getElementById('selectedHelp');
+    const selectedBadge = document.getElementById('selectedBadge');
+    const fieldsEl = document.getElementById('fields');
+    const messageEl = document.getElementById('message');
+    const widthResult = document.getElementById('widthResult');
+    const heightResult = document.getElementById('heightResult');
+    const areaResult = document.getElementById('areaResult');
+    const wasteResult = document.getElementById('wasteResult');
+    const resetCounts = document.getElementById('resetCounts');
+
+    const calcLabels = {
+      count_tiles: 'Calcul par tuiles',
+      count_visible_modules: 'Calcul par modules visibles',
+      count_waves_and_sheets: 'Calcul par ondes + plaques',
+      count_panels: 'Calcul par plaques/panneaux',
+      count_bac_imitation_tuile: 'Calcul imitation tuile'
+    };
+
+    const belgiumRoofCoverings = [
+      {
+        id: 'tuile-tempete-44',
+        name: 'Tuile Tempête 44',
+        dimension: '195 x 248 mm',
+        image: './assets/roof-coverings/top-01-tuile-tempete-44.png',
+        category: 'tuile_emboitable',
+        calculationMode: 'count_tiles',
+        defaultConfig: { usefulWidthMm: 195, battenGaugeMm: 248, wastePercent: 10 },
+        helpText: 'Compte les tuiles visibles en largeur, puis les rangées en hauteur.'
+      },
+      {
+        id: 'tuile-du-nord-44',
+        name: 'Tuile du Nord 44',
+        dimension: '195 x 248 mm',
+        image: './assets/roof-coverings/top-02-tuile-du-nord-44.png',
+        category: 'tuile_emboitable',
+        calculationMode: 'count_tiles',
+        defaultConfig: { usefulWidthMm: 195, battenGaugeMm: 248, wastePercent: 10 },
+        helpText: 'Compte les tuiles visibles en largeur, puis les rangées en hauteur.'
+      },
+      {
+        id: 'panne-tfp',
+        name: 'Panne TFP',
+        dimension: '200 x 338-350 mm',
+        image: './assets/roof-coverings/top-03-panne-tfp.png',
+        category: 'tuile_emboitable',
+        calculationMode: 'count_tiles',
+        defaultConfig: { usefulWidthMm: 200, battenGaugeMm: 344, wastePercent: 10 },
+        helpText: 'Compte les tuiles visibles en largeur, puis les rangées en hauteur.'
+      },
+      {
+        id: 'actua-10',
+        name: 'Actua 10',
+        dimension: '262 x 310-380 mm',
+        image: './assets/roof-coverings/top-04-actua-10.png',
+        category: 'tuile_emboitable',
+        calculationMode: 'count_tiles',
+        defaultConfig: { usefulWidthMm: 262, battenGaugeMm: 345, wastePercent: 10 },
+        helpText: 'Compte les tuiles visibles en largeur, puis les rangées en hauteur.'
+      },
+      {
+        id: 'tuile-plate-301-17x27',
+        name: 'Tuile Plate 301 17x27',
+        dimension: '170 x 90/110 mm',
+        image: './assets/roof-coverings/top-05-tuile-plate-301-17x27.png',
+        category: 'tuile_emboitable',
+        calculationMode: 'count_tiles',
+        defaultConfig: { usefulWidthMm: 170, battenGaugeMm: 100, wastePercent: 10 },
+        helpText: 'Compte les tuiles visibles en largeur, puis les rangées en hauteur.'
+      },
+      {
+        id: 'tuile-romane-1-2',
+        name: 'Tuile Romane 1.2',
+        dimension: '237 x 347-372 mm',
+        image: './assets/roof-coverings/top-06-tuile-romane-1-2.png',
+        category: 'tuile_emboitable',
+        calculationMode: 'count_tiles',
+        defaultConfig: { usefulWidthMm: 237, battenGaugeMm: 360, wastePercent: 10 },
+        helpText: 'Compte les tuiles visibles en largeur, puis les rangées en hauteur.'
+      },
+      {
+        id: 'tuile-beton-double-romane',
+        name: 'Tuile béton Double Romane',
+        dimension: '300 x 295-345 mm',
+        image: './assets/roof-coverings/top-07-tuile-beton-double-romane.png',
+        category: 'tuile_emboitable',
+        calculationMode: 'count_tiles',
+        defaultConfig: { usefulWidthMm: 300, battenGaugeMm: 320, wastePercent: 10 },
+        helpText: 'Compte les tuiles visibles en largeur, puis les rangées en hauteur.'
+      },
+      {
+        id: 'ardoise-fibres-ciment-40x24',
+        name: 'Ardoise fibres-ciment 40x24',
+        dimension: '400 x 240 mm',
+        image: './assets/roof-coverings/top-08-ardoise-fibres-ciment-40x24.png',
+        category: 'ardoise_rectangulaire',
+        calculationMode: 'count_visible_modules',
+        defaultConfig: { visibleWidthMm: 240, visibleHeightMm: 130, wastePercent: 10 },
+        helpText: 'Compte les ardoises visibles en largeur puis en hauteur.'
+      },
+      {
+        id: 'ardoise-fibres-ciment-60x30',
+        name: 'Ardoise fibres-ciment 60x30',
+        dimension: '600 x 300 mm',
+        image: './assets/roof-coverings/top-09-ardoise-fibres-ciment-60x30.png',
+        category: 'ardoise_rectangulaire',
+        calculationMode: 'count_visible_modules',
+        defaultConfig: { visibleWidthMm: 300, visibleHeightMm: 250, wastePercent: 10 },
+        helpText: 'Compte les ardoises visibles en largeur puis en hauteur.'
+      },
+      {
+        id: 'ardoise-naturelle-32x22',
+        name: 'Ardoise naturelle 32x22',
+        dimension: '320 x 220 mm',
+        image: './assets/roof-coverings/top-10-ardoise-naturelle-32x22.png',
+        category: 'ardoise_rectangulaire',
+        calculationMode: 'count_visible_modules',
+        defaultConfig: { visibleWidthMm: 220, visibleHeightMm: 110, wastePercent: 10 },
+        helpText: 'Compte les ardoises visibles en largeur puis en hauteur.'
+      }
+    ];
+
+    const newRoofCoverings = [
+      {
+        id: 'eternit-ondule',
+        name: 'Eternit ondulé',
+        dimension: 'largeur 873 mm',
+        image: './assets/roof-coverings/01-eternit-ondule.png',
+        category: 'plaque_ondulee',
+        calculationMode: 'count_waves_and_sheets',
+        defaultConfig: { wavePitchMm: 177, sheetLengthM: 1.5, wastePercent: 10 },
+        helpText: 'Compte les ondes visibles en largeur, puis les plaques en hauteur.'
+      },
+      {
+        id: 'eternit-amiante-losange-triangle',
+        name: 'Eternit amianté losange / triangle',
+        dimension: 'largeur 1030 mm',
+        image: './assets/roof-coverings/02-eternit-amiante-losange-triangle.png',
+        category: 'losange_triangle',
+        calculationMode: 'count_visible_modules',
+        defaultConfig: { visibleWidthMm: 300, visibleHeightMm: 300, wastePercent: 10 },
+        helpText: 'Compte les losanges ou triangles visibles en largeur et en hauteur.'
+      },
+      {
+        id: 'bac-zinc-ondule',
+        name: 'Bac zinc ondulé',
+        dimension: 'largeur 950 mm',
+        image: './assets/roof-coverings/03-bac-zinc-ondule.png',
+        category: 'plaque_ondulee',
+        calculationMode: 'count_waves_and_sheets',
+        defaultConfig: { wavePitchMm: 76, sheetLengthM: 2, wastePercent: 8 },
+        helpText: 'Compte les ondulations visibles en largeur, puis les plaques en hauteur.'
+      },
+      {
+        id: 'bac-acier-nervure',
+        name: 'Bac acier nervuré',
+        dimension: 'largeur 1000 mm',
+        image: './assets/roof-coverings/04-bac-acier-nervure.png',
+        category: 'plaque_nervuree',
+        calculationMode: 'count_waves_and_sheets',
+        defaultConfig: { wavePitchMm: 250, sheetLengthM: 3, wastePercent: 8 },
+        helpText: 'Compte les nervures visibles en largeur, puis les plaques en hauteur.'
+      },
+      {
+        id: 'bac-acier-trapezoidal',
+        name: 'Bac acier trapézoïdal',
+        dimension: 'largeur 1000 mm',
+        image: './assets/roof-coverings/05-bac-acier-trapezoidal.png',
+        category: 'plaque_trapezoidale',
+        calculationMode: 'count_waves_and_sheets',
+        defaultConfig: { wavePitchMm: 250, sheetLengthM: 3, wastePercent: 8 },
+        helpText: 'Compte les profils visibles en largeur, puis les plaques en hauteur.'
+      },
+      {
+        id: 'plaque-fibro-ciment-plate',
+        name: 'Plaque fibro-ciment plate',
+        dimension: '1750 x 1130 mm',
+        image: './assets/roof-coverings/06-plaque-fibro-ciment-plate.png',
+        category: 'plaque_plate',
+        calculationMode: 'count_panels',
+        defaultConfig: { usefulPanelWidthM: 1.13, usefulPanelLengthM: 1.75, wastePercent: 10 },
+        helpText: 'Compte les plaques en largeur puis en hauteur.'
+      },
+      {
+        id: 'plaque-fibro-ciment-ondulee',
+        name: 'Plaque fibro-ciment ondulée',
+        dimension: 'largeur 1090 mm',
+        image: './assets/roof-coverings/07-plaque-fibro-ciment-ondulee.png',
+        category: 'plaque_ondulee',
+        calculationMode: 'count_waves_and_sheets',
+        defaultConfig: { wavePitchMm: 177, sheetLengthM: 1.5, wastePercent: 10 },
+        helpText: 'Compte les ondes visibles en largeur, puis les plaques en hauteur.'
+      },
+      {
+        id: 'bac-acier-imitation-tuile',
+        name: 'Bac acier imitation tuile',
+        dimension: 'largeur 1100 mm',
+        image: './assets/roof-coverings/08-bac-acier-imitation-tuile.png',
+        category: 'bac_imitation_tuile',
+        calculationMode: 'count_bac_imitation_tuile',
+        defaultConfig: {
+          imitationMode: 'modules',
+          visibleWidthMm: 350,
+          visibleHeightMm: 350,
+          usefulPanelWidthM: 1.1,
+          usefulPanelLengthM: 3,
+          wastePercent: 8
+        },
+        helpText: 'Choisis si tu comptes les fausses tuiles visibles ou les plaques complètes.'
+      },
+      {
+        id: 'panneau-sandwich-toiture',
+        name: 'Panneau sandwich toiture',
+        dimension: 'largeur 1000 mm',
+        image: './assets/roof-coverings/09-panneau-sandwich-toiture.png',
+        category: 'panneau_sandwich',
+        calculationMode: 'count_panels',
+        defaultConfig: { usefulPanelWidthM: 1, usefulPanelLengthM: 4, wastePercent: 8 },
+        helpText: 'Compte les panneaux en largeur puis en hauteur.'
+      },
+      {
+        id: 'bac-aluminium-nervure',
+        name: 'Bac aluminium nervuré',
+        dimension: 'largeur 1000 mm',
+        image: './assets/roof-coverings/10-bac-aluminium-nervure.png',
+        category: 'plaque_nervuree',
+        calculationMode: 'count_waves_and_sheets',
+        defaultConfig: { wavePitchMm: 250, sheetLengthM: 3, wastePercent: 8 },
+        helpText: 'Compte les nervures visibles en largeur, puis les plaques en hauteur.'
+      }
+    ];
+
+    const roofCoverings = mergeCoverings([
+      ...belgiumRoofCoverings,
+      ...newRoofCoverings
+    ]);
+
+    let selectedId = roofCoverings[0].id;
+
+    function mergeCoverings(items) {
+      const seen = new Map();
+      items.forEach((item) => {
+        const key = item.id.toLowerCase();
+        if (seen.has(key)) {
+          seen.set(key, { ...seen.get(key), ...item });
+        } else {
+          seen.set(key, item);
+        }
+      });
+      return [...seen.values()];
+    }
+
+    function parseNumber(value) {
+      const text = String(value || '').replace(',', '.').replace(/[^\d.-]/g, '');
+      const number = Number(text);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function round2(value) {
+      return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    function formatM(value) {
+      return `${round2(value).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
+    }
+
+    function formatM2(value) {
+      return `${round2(value).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`;
+    }
+
+    function calculateByTileCount(params) {
+      const widthM = params.horizontalCount * params.usefulWidthMm / 1000;
+      const heightM = params.verticalCount * params.battenGaugeMm / 1000;
+      return withWaste(widthM, heightM, params.wastePercent);
+    }
+
+    function calculateByVisibleModules(params) {
+      const widthM = params.horizontalCount * params.visibleWidthMm / 1000;
+      const heightM = params.verticalCount * params.visibleHeightMm / 1000;
+      return withWaste(widthM, heightM, params.wastePercent);
+    }
+
+    function calculateByWavesAndSheets(params) {
+      const widthM = params.horizontalWaveCount * params.wavePitchMm / 1000;
+      const heightM = params.verticalSheetCount * params.sheetLengthM;
+      return withWaste(widthM, heightM, params.wastePercent);
+    }
+
+    function calculateByPanelCount(params) {
+      const widthM = params.horizontalPanelCount * params.usefulPanelWidthM;
+      const heightM = params.verticalPanelCount * params.usefulPanelLengthM;
+      return withWaste(widthM, heightM, params.wastePercent);
+    }
+
+    function calculateBacImitationTuile(params) {
+      if (params.imitationMode === 'panels') {
+        return calculateByPanelCount(params);
+      }
+      return calculateByVisibleModules(params);
+    }
+
+    function withWaste(widthM, heightM, wastePercent) {
+      const areaM2 = widthM * heightM;
+      const areaWithWasteM2 = areaM2 * (1 + (wastePercent || 0) / 100);
+      return {
+        widthM: round2(widthM),
+        heightM: round2(heightM),
+        areaM2: round2(areaM2),
+        areaWithWasteM2: round2(areaWithWasteM2)
+      };
+    }
+
+    function field(label, key, unit, value, required = true) {
+      return { label, key, unit, value, required, type: 'number' };
+    }
+
+    function selectField(label, key, value, options) {
+      return { label, key, value, options, required: true, type: 'select' };
+    }
+
+    function fieldsFor(item) {
+      const cfg = item.defaultConfig;
+      if (item.calculationMode === 'count_tiles') {
+        return [
+          field('Nombre en horizontal', 'horizontalCount', '', ''),
+          field('Nombre de rangées en vertical', 'verticalCount', '', ''),
+          field('Largeur utile', 'usefulWidthMm', 'mm', cfg.usefulWidthMm),
+          field('Lattage / pureau', 'battenGaugeMm', 'mm', cfg.battenGaugeMm),
+          field('Chute', 'wastePercent', '%', cfg.wastePercent, false)
+        ];
+      }
+      if (item.calculationMode === 'count_visible_modules') {
+        return [
+          field('Nombre en horizontal', 'horizontalCount', '', ''),
+          field('Nombre en vertical', 'verticalCount', '', ''),
+          field('Largeur visible', 'visibleWidthMm', 'mm', cfg.visibleWidthMm),
+          field('Hauteur visible', 'visibleHeightMm', 'mm', cfg.visibleHeightMm),
+          field('Chute', 'wastePercent', '%', cfg.wastePercent, false)
+        ];
+      }
+      if (item.calculationMode === 'count_waves_and_sheets') {
+        return [
+          field('Nombre d’ondes / nervures en horizontal', 'horizontalWaveCount', '', ''),
+          field('Largeur d’une onde / nervure', 'wavePitchMm', 'mm', cfg.wavePitchMm),
+          field('Nombre de plaques en hauteur', 'verticalSheetCount', '', ''),
+          field('Longueur utile d’une plaque', 'sheetLengthM', 'm', cfg.sheetLengthM),
+          field('Chute', 'wastePercent', '%', cfg.wastePercent, false)
+        ];
+      }
+      if (item.calculationMode === 'count_panels') {
+        return [
+          field('Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
+          field('Largeur utile d’une plaque', 'usefulPanelWidthM', 'm', cfg.usefulPanelWidthM),
+          field('Nombre de plaques en vertical', 'verticalPanelCount', '', ''),
+          field('Longueur utile d’une plaque', 'usefulPanelLengthM', 'm', cfg.usefulPanelLengthM),
+          field('Chute', 'wastePercent', '%', cfg.wastePercent, false)
+        ];
+      }
+
+      const mode = currentValue('imitationMode') || cfg.imitationMode || 'modules';
+      const modeField = selectField('Méthode de comptage', 'imitationMode', mode, [
+        { value: 'modules', label: 'Je compte les fausses tuiles visibles' },
+        { value: 'panels', label: 'Je compte les plaques complètes' }
+      ]);
+
+      if (mode === 'panels') {
+        return [
+          modeField,
+          field('Nombre de plaques en horizontal', 'horizontalPanelCount', '', ''),
+          field('Largeur utile d’une plaque', 'usefulPanelWidthM', 'm', cfg.usefulPanelWidthM),
+          field('Nombre de plaques en vertical', 'verticalPanelCount', '', ''),
+          field('Longueur utile d’une plaque', 'usefulPanelLengthM', 'm', cfg.usefulPanelLengthM),
+          field('Chute', 'wastePercent', '%', cfg.wastePercent, false)
+        ];
+      }
+
+      return [
+        modeField,
+        field('Nombre de modules en horizontal', 'horizontalCount', '', ''),
+        field('Nombre de rangées en vertical', 'verticalCount', '', ''),
+        field('Largeur visible d’un module', 'visibleWidthMm', 'mm', cfg.visibleWidthMm),
+        field('Hauteur visible d’une rangée', 'visibleHeightMm', 'mm', cfg.visibleHeightMm),
+        field('Chute', 'wastePercent', '%', cfg.wastePercent, false)
+      ];
+    }
+
+    function currentItem() {
+      return roofCoverings.find((item) => item.id === selectedId) || roofCoverings[0];
+    }
+
+    function currentValue(key) {
+      const el = document.querySelector(`[data-field="${key}"]`);
+      return el ? el.value : '';
+    }
+
+    function valuesFromForm() {
+      const values = {};
+      document.querySelectorAll('[data-field]').forEach((input) => {
+        values[input.dataset.field] = input.tagName === 'SELECT' ? input.value : parseNumber(input.value);
+      });
+      return values;
+    }
+
+    function requiredFieldsForMode(item) {
+      const mode = currentValue('imitationMode') || item.defaultConfig.imitationMode;
+      if (item.calculationMode === 'count_tiles') {
+        return ['horizontalCount', 'verticalCount', 'usefulWidthMm', 'battenGaugeMm'];
+      }
+      if (item.calculationMode === 'count_visible_modules') {
+        return ['horizontalCount', 'verticalCount', 'visibleWidthMm', 'visibleHeightMm'];
+      }
+      if (item.calculationMode === 'count_waves_and_sheets') {
+        return ['horizontalWaveCount', 'wavePitchMm', 'verticalSheetCount', 'sheetLengthM'];
+      }
+      if (item.calculationMode === 'count_panels') {
+        return ['horizontalPanelCount', 'usefulPanelWidthM', 'verticalPanelCount', 'usefulPanelLengthM'];
+      }
+      return mode === 'panels'
+        ? ['horizontalPanelCount', 'usefulPanelWidthM', 'verticalPanelCount', 'usefulPanelLengthM']
+        : ['horizontalCount', 'verticalCount', 'visibleWidthMm', 'visibleHeightMm'];
+    }
+
+    function validate(item, values) {
+      const required = requiredFieldsForMode(item);
+      for (const key of required) {
+        const input = document.querySelector(`[data-field="${key}"]`);
+        if (!input || String(input.value).trim() === '') {
+          return 'Remplis les champs obligatoires pour calculer.';
+        }
+        if (values[key] < 0) {
+          return 'Les valeurs négatives ne sont pas acceptées.';
+        }
+        if (values[key] === 0) {
+          return 'Une valeur obligatoire ne peut pas être égale à 0.';
+        }
+      }
+
+      const waste = values.wastePercent || 0;
+      if (waste < 0) return 'La chute ne peut pas être négative.';
+      return '';
+    }
+
+    function calculate(item, values) {
+      if (item.calculationMode === 'count_tiles') return calculateByTileCount(values);
+      if (item.calculationMode === 'count_visible_modules') return calculateByVisibleModules(values);
+      if (item.calculationMode === 'count_waves_and_sheets') return calculateByWavesAndSheets(values);
+      if (item.calculationMode === 'count_panels') return calculateByPanelCount(values);
+      return calculateBacImitationTuile(values);
+    }
+
+    function setupMaterials() {
+      roofCoverings.forEach((item) => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'material-option';
+        card.dataset.material = item.id;
+        card.innerHTML = `
+          <img class="roof-sample" src="${item.image}" alt="${item.name}">
+          <span>
+            <strong>${item.name} <span class="dimension-text">${item.dimension}</span></strong>
+            <small>${calcLabels[item.calculationMode]}</small>
+          </span>
+        `;
+        card.addEventListener('click', () => {
+          selectedId = item.id;
+          renderSelected();
+        });
+        materialGallery.appendChild(card);
+      });
+    }
+
+    function renderFields(item) {
+      fieldsEl.innerHTML = '';
+      fieldsFor(item).forEach((itemField) => {
+        const wrap = document.createElement('div');
+        const labelEl = document.createElement('label');
+        labelEl.setAttribute('for', itemField.key);
+        labelEl.textContent = itemField.unit ? `${itemField.label} (${itemField.unit})` : itemField.label;
+        wrap.appendChild(labelEl);
+
+        if (itemField.type === 'select') {
+          const select = document.createElement('select');
+          select.id = itemField.key;
+          select.dataset.field = itemField.key;
+          itemField.options.forEach((option) => {
+            const optionEl = document.createElement('option');
+            optionEl.value = option.value;
+            optionEl.textContent = option.label;
+            select.appendChild(optionEl);
+          });
+          select.value = itemField.value;
+          select.addEventListener('change', () => {
+            renderFields(currentItem());
+            updateResults();
+          });
+          wrap.appendChild(select);
+        } else {
+          const input = document.createElement('input');
+          input.id = itemField.key;
+          input.dataset.field = itemField.key;
+          input.inputMode = 'decimal';
+          input.placeholder = itemField.required ? 'à remplir' : '';
+          input.value = itemField.value ?? '';
+          bindLive(input);
+          wrap.appendChild(input);
+        }
+
+        fieldsEl.appendChild(wrap);
+      });
+    }
+
+    function renderSelected() {
+      const item = currentItem();
+      document.querySelectorAll('.material-option').forEach((card) => {
+        card.classList.toggle('active', card.dataset.material === item.id);
+      });
+      selectedImage.src = item.image;
+      selectedImage.alt = item.name;
+      selectedName.textContent = `${item.name} · ${item.dimension}`;
+      selectedHelp.textContent = item.helpText;
+      selectedBadge.textContent = calcLabels[item.calculationMode];
+      renderFields(item);
+      updateResults();
+    }
+
+    function bindLive(input) {
+      input.addEventListener('input', updateResults);
+      input.addEventListener('change', updateResults);
+      input.addEventListener('keyup', updateResults);
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          input.blur();
+          updateResults();
+        }
+      });
+    }
+
+    function setMessage(text, type = '') {
+      messageEl.textContent = text;
+      messageEl.className = `message ${text ? 'show' : ''} ${type}`;
+    }
+
+    function setResults(result) {
+      widthResult.textContent = formatM(result.widthM);
+      heightResult.textContent = formatM(result.heightM);
+      areaResult.textContent = formatM2(result.areaM2);
+      wasteResult.textContent = formatM2(result.areaWithWasteM2);
+    }
+
+    function resetResult() {
+      setResults({ widthM: 0, heightM: 0, areaM2: 0, areaWithWasteM2: 0 });
+    }
+
+    function updateResults() {
+      const item = currentItem();
+      const values = valuesFromForm();
+      const error = validate(item, values);
+      if (error) {
+        resetResult();
+        setMessage(error, 'error');
+        return;
+      }
+
+      const result = calculate(item, values);
+      setResults(result);
+
+      if (result.areaM2 < 1) {
+        setMessage('Surface très faible, vérifiez les valeurs.', 'warn');
+      } else if (result.areaM2 > 1000) {
+        setMessage('Surface très élevée, vérifiez les valeurs.', 'warn');
+      } else {
+        setMessage('');
+      }
+    }
+
+    resetCounts.addEventListener('click', () => {
+      document.querySelectorAll('[data-field]').forEach((input) => {
+        if (input.dataset.field.includes('Count')) input.value = '';
+        if (input.dataset.field === 'horizontalWaveCount') input.value = '';
+        if (input.dataset.field === 'verticalSheetCount') input.value = '';
+      });
+      updateResults();
+    });
+
+    setupMaterials();
+    renderSelected();
+
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
